@@ -50,10 +50,15 @@ app.renderMessage = function (messageObj) {
   };
   var escapedText = escapeHtml(messageObj.text);
   var escapedUsername = escapeHtml(messageObj.username);
-  $('#chats').append(`<div>${escapedUsername}: ${escapedText}</div>`);
+  $('#chats').append(`<div><span class='username' onClick="app.handleUsernameClick()">${escapedUsername}</span>: ${escapedText}</div>`);
 };
 app.renderRoom = function (name) {
   $('#roomSelect').append(`<div>${name}</div>`);
+};
+
+app.handleUsernameClick = function() {
+  // add friend to current user's friend list
+  console.log('hi friend');
 };
 
 app.init();
