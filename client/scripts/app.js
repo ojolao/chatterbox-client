@@ -1,12 +1,28 @@
 var app = {
   server: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages'
 };
+app.rooms = new Set();
+app.currentRoom = 'lobby';
 app.init = function() { 
-  this.fetch();
+  $('#send').submit(function(event) {
+    event.preventDefault();
+    app.handleSubmit();
+  });
+  app.fetch();
+  setInterval(function() {
+    app.clearMessages();
+    app.fetch();
+  }, 15000); //how to get it to not blink?
+  $('#roomSelect').on('change', function() {
+    console.log(app.currentRoom);
+    app.currentRoom = $('#roomSelect option:selected').text();
+    app.clearMessages();
+    app.fetch();
+  });
 };
 app.send = function (message) {
   $.ajax({
-    url: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages',
+    url: app.server,
     type: 'POST',
     data: JSON.stringify(message),
     contentType: 'application/json',
@@ -21,17 +37,25 @@ app.send = function (message) {
 };
 app.fetch = function () {
   $.ajax({
-    url: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages',
+    url: app.server + '?order=-createdAt', 
     type: 'GET',
     contentType: 'application/json',
     success: function (data) {
       console.log('chatterbox: chats received');
-      console.log(data);
+      //console.log(data.results);
       var messages = data.results;
       messages.forEach(function(message) {
-        app.renderMessage(message);
+        // If the message has the same roomname as the room we're in
+        // we will render the message on screen
+        if (message.roomname === app.currentRoom) {
+          app.renderMessage(message);
+        }
+        app.rooms.add(message.roomname); 
       });
-      //messages.forEach(this.renderMessage(message));
+      $('#roomSelect').find('option').remove();
+      app.rooms.forEach(function(room, key) {
+        $('#roomSelect').append($('<option></option>').attr('value', key).text(room));
+      });
     },
     error: function (data) {
       // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -58,13 +82,21 @@ app.renderRoom = function (name) {
 
 app.handleUsernameClick = function() {
   // add friend to current user's friend list
-  // console.log('hi friend');
+  console.log('hi friend');
 };
 
 app.handleSubmit = function() {
+  var message = {
+    roomname: app.currentRoom,
+    username: window.location.search.slice(10), //should we escape the username for server security?
+    text: $('#message').val()
+  };
+  console.log(message);
+  app.send(message);
+  location.reload();
   console.log('submitting');
 };
 
-
-
-app.init();
+$(document).ready(function() {
+  app.init();
+});
