@@ -58,7 +58,13 @@ app.renderRoom = function (name) {
 
 app.handleUsernameClick = function() {
   // add friend to current user's friend list
-  console.log('hi friend');
+  // console.log('hi friend');
 };
+
+app.handleSubmit = function() {
+  console.log('submitting');
+};
+
+
 
 app.init();
