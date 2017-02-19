@@ -1,21 +1,25 @@
 var app = {
-  server: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages'
+  server: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages',
+  
 };
+
 app.rooms = new Set();
 app.currentRoom = 'lobby';
 app.init = function() { 
+  app.$roomSelect = $('#roomSelect');
   $('#send').submit(function(event) {
     event.preventDefault();
     app.handleSubmit();
   });
   app.fetch();
-  setInterval(function() {
+/*  setInterval(function() {
     app.clearMessages();
     app.fetch();
-  }, 15000); //how to get it to not blink?
+  }, 15000); //how to get it to not blink?*/
+
   $('#roomSelect').on('change', function() {
-    console.log(app.currentRoom);
     app.currentRoom = $('#roomSelect option:selected').text();
+    console.log(app.currentRoom);
     app.clearMessages();
     app.fetch();
   });
@@ -44,17 +48,23 @@ app.fetch = function () {
       console.log('chatterbox: chats received');
       //console.log(data.results);
       var messages = data.results;
+
+      // For each message, filter messages for roomname
       messages.forEach(function(message) {
         // If the message has the same roomname as the room we're in
         // we will render the message on screen
-        if (message.roomname === app.currentRoom) {
+        var roomname = message.roomname;
+        if (roomname === app.currentRoom) {
           app.renderMessage(message);
         }
-        app.rooms.add(message.roomname); 
+        app.rooms.add(roomname);
+
       });
+
+      // Adds each room in our room collection to <select> as options
       $('#roomSelect').find('option').remove();
-      app.rooms.forEach(function(room, key) {
-        $('#roomSelect').append($('<option></option>').attr('value', key).text(room));
+      app.rooms.forEach(function(room) {
+        app.renderRoom(room);
       });
     },
     error: function (data) {
@@ -63,6 +73,17 @@ app.fetch = function () {
     }
   });
 };
+
+
+
+// Puts a room into the <select>
+app.renderRoom = function(roomname) {
+
+  var $option = $('<option/>').val(roomname).text(roomname);
+  // Add to select
+  app.$roomSelect.append($option);
+};
+
 app.clearMessages = function() {
   $('#chats').empty();
 };
@@ -75,9 +96,6 @@ app.renderMessage = function (messageObj) {
   var escapedText = escapeHtml(messageObj.text);
   var escapedUsername = escapeHtml(messageObj.username);
   $('#chats').append(`<div><span class='username' onClick="app.handleUsernameClick()">${escapedUsername}</span>: ${escapedText}</div>`);
-};
-app.renderRoom = function (name) {
-  $('#roomSelect').append(`<div>${name}</div>`);
 };
 
 app.handleUsernameClick = function() {
